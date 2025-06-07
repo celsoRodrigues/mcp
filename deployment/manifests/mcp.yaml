@@ -1,0 +1,119 @@
+---
+# ConfigMap for MCP Server configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+  namespace: mcp-server
+data:
+  MCP_TRANSPORT: "http"
+  MCP_SSE_PORT: "8080"
+  MCP_HTTP_PORT: "8081"
+  REDIS_ADDR: "redis-service:6379"
+  REDIS_SESSION_PREFIX: "mcp:session:"
+---
+# MCP Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  namespace: mcp-server
+  labels:
+    app: mcp-server
+spec:
+  replicas: 3  # Scale horizontally with Redis session sharing
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      containers:
+      - name: mcp-server
+        image: localhost:5001/mcp-server:0.2  # Replace with your image
+        ports:
+        - containerPort: 8080
+          name: sse-port
+        - containerPort: 8081
+          name: http-port
+        env:
+        - name: MCP_TRANSPORT
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-server-config
+              key: MCP_TRANSPORT
+        - name: MCP_SSE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-server-config
+              key: MCP_SSE_PORT
+        - name: MCP_HTTP_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-server-config
+              key: MCP_HTTP_PORT
+        - name: REDIS_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-server-config
+              key: REDIS_ADDR
+        - name: REDIS_SESSION_PREFIX
+          valueFrom:
+            configMapKeyRef:
+              name: mcp-server-config
+              key: REDIS_SESSION_PREFIX
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mcp-server-secrets
+              key: redis-password
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 5
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+
+---
+# MCP Server Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server-service
+  namespace: mcp-server
+spec:
+  selector:
+    app: mcp-server
+  ports:
+  - name: sse
+    port: 8080
+    targetPort: 8080
+  - name: http
+    port: 8081
+    targetPort: 8081
+  type: ClusterIP
