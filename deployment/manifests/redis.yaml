@@ -9,7 +9,8 @@ type: Opaque
 data:
   # Base64 encoded values
   # To generate: echo -n "your-redis-password" | base64
-  # redis-password: ""  # Add your base64 encoded Redis password here
+  redis-password: "c2VjcmV0"  
+  # Add your base64 encoded Redis password here
   # Example: redis-password: c2VjcmV0
 
 ---

@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
       - name: mcp-server
-        image: localhost:5001/mcp-server:0.2  # Replace with your image
+        image: localhost:5001/mcp:0.1  # Replace with your image
         ports:
         - containerPort: 8080
           name: sse-port
@@ -79,7 +79,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 8080
+            port: 8081
           initialDelaySeconds: 30
           timeoutSeconds: 5
           periodSeconds: 10

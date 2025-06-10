@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mcpserver/pkg/mcptypes"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/celsorodrigues/mcp/pkg/mcptypes"
 
 	"github.com/go-redis/redis/v8"
 )

@@ -6,14 +6,6 @@ metadata:
   name: mcp-server-ingress
   namespace: mcp-server
   annotations:
-    kubernetes.io/ingress.class: "nginx"  # or your ingress controller
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
-    # For SSE support
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/upstream-hash-by: "$binary_remote_addr"
     # cert-manager annotations (if using)
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
@@ -26,7 +18,14 @@ spec:
   - host: localhost
     http:
       paths:
-      - path: /
+      - path: /health
+        pathType: Prefix
+        backend:
+          service:
+            name: mcp-server-service
+            port:
+              number: 8081
+      - path: /mcp
         pathType: Prefix
         backend:
           service:
